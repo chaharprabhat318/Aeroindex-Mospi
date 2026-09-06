@@ -1,5 +1,5 @@
 """
-VayuDrishti (वायुदृष्टि) - SIH26056 Airfare Price Index Prototype
+AeroIndex (वायुदृष्टि) - SIH26056 Airfare Price Index Prototype
 Built for the Ministry of Statistics and Programme Implementation (MoSPI) challenge
 Version: 2.6.0 (Demo data refresh, dynamic indices, and prototype briefing export)
 Last Updated: 02-September-2026
@@ -33,7 +33,7 @@ from app.api.scrapers_api import router as scrapers_router
 from app.api.export_api import router as export_router
 
 app = FastAPI(
-    title="VayuDrishti (वायुदृष्टि) - Airfare Price Index Prototype",
+    title="AeroIndex (वायुदृष्टि) - Airfare Price Index Prototype",
     description="Smart India Hackathon 2026 prototype for MoSPI PS SIH26056",
     version="2.6.0"
 )
@@ -68,39 +68,32 @@ def find_static_file(rel_path: str):
             return c
     return None
 
-# 1. Root Route Handler: Serves index.html with all live patches applied
+# 1. Root Route Handler: Serves index.html with clean AeroIndex branding and live patches
 @app.get("/")
 async def serve_root_page():
     p = find_static_file("index.html")
     if p:
         html = p.read_text(encoding="utf-8", errors="ignore")
 
-        # Patch 1: Fix broken Hindi encoding (GitHub upload corrupts Unicode → ???)
-        html = html.replace("(??????????)", "(वायुदृष्टि)")
-        html = html.replace("(?????????)", "(वायुदृष्टि)")
+        # Clean any remaining ???? or Hindi brackets to ensure 100% clean AeroIndex title
+        html = html.replace("(वायुदृष्टि)", "")
+        html = html.replace("(??????????)", "")
+        html = html.replace("(?????????)", "")
 
-        # Patch 2: Fix PDF download popup blocker
+        # Patch PDF download popup blocker
         html = html.replace(
             'href="javascript:void(0)" onclick="downloadLivePdf(event)"',
             "href=\"/api/export/gazette-pdf\" onclick=\"this.href='/api/export/gazette-pdf?afi='+(typeof lastKnownIndexValue!=='undefined'?lastKnownIndexValue:120)+'&t='+Date.now()\" download"
         )
 
-        # Patch 3: Change sync interval options to 5/10/15/30 minutes
-        html = html.replace(
-            '<option value="10">10s</option>\r\n                        <option value="15" selected>15s</option>\r\n                        <option value="30">30s</option>\r\n                        <option value="60">60s</option>',
-            '<option value="300" selected>5 min</option>\n                        <option value="600">10 min</option>\n                        <option value="900">15 min</option>\n                        <option value="1800">30 min</option>'
-        )
-        # Fallback if line endings differ
+        # Sync interval options to 5/10/15/30 minutes
         html = html.replace(
             '<option value="10">10s</option>\n                        <option value="15" selected>15s</option>\n                        <option value="30">30s</option>\n                        <option value="60">60s</option>',
             '<option value="300" selected>5 min</option>\n                        <option value="600">10 min</option>\n                        <option value="900">15 min</option>\n                        <option value="1800">30 min</option>'
         )
 
-        # Patch 4: Fix title tag encoding
-        html = html.replace("VayuDrishti (??????????)", "VayuDrishti (वायुदृष्टि)")
-
         return HTMLResponse(content=html)
-    return HTMLResponse("<h1>VayuDrishti System Booting... Please refresh in 5 seconds.</h1>")
+    return HTMLResponse("<h1>AeroIndex System Booting... Please refresh in 5 seconds.</h1>")
 
 # 2. Static Asset Routes (JS/CSS/Assets) with automatic fallback
 @app.get("/js/{filename}")
@@ -141,11 +134,11 @@ async def scheduled_background_scraper():
             
             if auto_scraper_config.get("is_enabled", True):
                 res = orchestrator.run_live_ingestion_batch(sample_size_routes=3)
-                print(f"[VayuDrishti Demo Refresh] Processed {res['quotes_collected']} observations | Recomputed AFI: {res['recomputed_national_index']}")
+                print(f"[AeroIndex Demo Refresh] Processed {res['quotes_collected']} observations | Recomputed AFI: {res['recomputed_national_index']}")
         except asyncio.CancelledError:
             break
         except Exception as e:
-            print(f"[VayuDrishti Demo Refresh] Background error: {e}")
+            print(f"[AeroIndex Demo Refresh] Background error: {e}")
             await asyncio.sleep(5)
 
 @app.on_event("startup")
@@ -156,7 +149,7 @@ def on_startup():
     except Exception as e:
         print("[Database Init Error]:", e)
     asyncio.create_task(scheduled_background_scraper())
-    print("[VayuDrishti SIH26056] Prototype server started with demo-data refresh active.")
+    print("[AeroIndex SIH26056] Prototype server started with demo-data refresh active.")
 
 if __name__ == "__main__":
     import uvicorn
