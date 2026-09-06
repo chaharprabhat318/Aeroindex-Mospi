@@ -75,18 +75,23 @@ async def serve_root_page():
     if p:
         html = p.read_text(encoding="utf-8", errors="ignore")
 
-        # Clean any remaining ???? or Hindi brackets to ensure 100% clean AeroIndex title
+        # 1. Guarantee 100% AeroIndex branding (replaces any old VayuDrishti text in static HTML)
+        html = html.replace("VayuDrishti", "AeroIndex")
+        html = html.replace("vayudrishti", "aeroindex")
+        html = html.replace("VAYUDRISHTI", "AEROINDEX")
+
+        # 2. Clean any remaining ???? or Hindi brackets
         html = html.replace("(वायुदृष्टि)", "")
         html = html.replace("(??????????)", "")
         html = html.replace("(?????????)", "")
 
-        # Patch PDF download popup blocker
+        # 3. Patch PDF download popup blocker
         html = html.replace(
             'href="javascript:void(0)" onclick="downloadLivePdf(event)"',
             "href=\"/api/export/gazette-pdf\" onclick=\"this.href='/api/export/gazette-pdf?afi='+(typeof lastKnownIndexValue!=='undefined'?lastKnownIndexValue:120)+'&t='+Date.now()\" download"
         )
 
-        # Sync interval options to 5/10/15/30 minutes
+        # 4. Sync interval options to 5/10/15/30 minutes
         html = html.replace(
             '<option value="10">10s</option>\n                        <option value="15" selected>15s</option>\n                        <option value="30">30s</option>\n                        <option value="60">60s</option>',
             '<option value="300" selected>5 min</option>\n                        <option value="600">10 min</option>\n                        <option value="900">15 min</option>\n                        <option value="1800">30 min</option>'
