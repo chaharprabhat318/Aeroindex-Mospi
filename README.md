@@ -76,3 +76,5 @@ Open **`http://localhost:8000`** in your browser to access the live MoSPI Comman
 ```bash
 python backend/tests/test_indices.py
 ```
+
+-----------
